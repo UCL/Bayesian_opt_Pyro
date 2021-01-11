@@ -32,7 +32,7 @@ def g1(x):
 lower = np.array([0.0]*1)
 upper = np.array([1.]*1)
 
-solution1 = BayesOpt().solve(f1, [0], bounds=(lower,upper), maxfun=13, casadi=True, acquisition=2, constraints=[g1])
+solution1 = BayesOpt().solve(f1, [0], bounds=(lower,upper), maxfun=13, print_iteration=True, casadi=True, acquisition=2, constraints=[g1])
 
 def f1(x):
     return (6 * x[0] - 2)**2 * np.sin(12 * x[1] - 4)

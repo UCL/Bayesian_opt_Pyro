@@ -27,14 +27,15 @@ class BayesOpt(object):
 
     def solve(self, objective, xo=0.5, bounds=(0,1), maxfun=20, N_initial=4,
               select_kernel='Matern52', acquisition=1, casadi=False, constraints = None,
-              probabilistic=False):
+              probabilistic=False, print_iteration=False):
 
         self.x0            = torch.Tensor(xo)
         self.bounds        = bounds
         self.maxfun        = maxfun
         self.N_initial     = N_initial
         self.objective     = objective
-        self.probabilistic = False
+        self.probabilistic = probabilistic
+        self.print_iter    = print_iteration
         if constraints is None:
             self.constraints = []
         else:
@@ -420,6 +421,9 @@ class BayesOpt(object):
             xmin = self.next_x()
 
             self.update_data(xmin)
+            if self.print_iter:
+                print('new x: ', xmin.data.numpy(), 'at iter ', i+1)
+                print('new obj: ', self.Y[i,0].data.numpy(), 'at iter ', i+1)
             self.gpmodel = self.training()
 
         _, optim = self.find_min_so_far(argmin=True)
