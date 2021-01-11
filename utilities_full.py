@@ -422,8 +422,11 @@ class BayesOpt(object):
 
             self.update_data(xmin)
             if self.print_iter:
-                print('new x: ', xmin.data.numpy(), 'at iter ', i+1)
-                print('new obj: ', self.Y[i,0].data.numpy(), 'at iter ', i+1)
+                _, optim_iter = self.find_min_so_far(argmin=True)
+                x_print = self.X[[optim_iter]]
+                y_print = self.Y[[optim_iter], 0]
+                print('new x: ', x_print.data.numpy(), 'at iter ', i+1)
+                print('new obj: ', y_print.data.numpy(), 'at iter ', i+1)
             self.gpmodel = self.training()
 
         _, optim = self.find_min_so_far(argmin=True)
