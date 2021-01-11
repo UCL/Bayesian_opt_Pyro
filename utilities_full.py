@@ -26,7 +26,7 @@ class BayesOpt(object):
         print('Start Bayesian Optimization using Torch')
 
     def solve(self, objective, xo=0.5, bounds=(0,1), maxfun=20, N_initial=4,
-              select_kernel='Matern52', acquisition=1, casadi=False, constraints = None,
+              select_kernel='Matern52', acquisition='LCB', casadi=False, constraints = None,
               probabilistic=False, print_iteration=False):
 
         self.x0            = torch.Tensor(xo)
@@ -54,6 +54,18 @@ class BayesOpt(object):
         self.kernel        = select_kernel
         self.nx            = max(self.x0.shape)
         self.casadi        = casadi
+
+        supported_acquisition = ['Mean', 'LCB', 'EI']
+        k = 0
+        for supp in supported_acquisition:
+            if acquisition == supp:
+                break
+            else:
+                k+=1
+        if k == len(supported_acquisition):
+            warnings.formatwarning = custom_formatwarning
+            warnings.warn('WARNING: Selected acquisition does not exist, Lower Confidence Bound is used instead')
+            acquisition = 'LCB'
         self.acquisition   = acquisition
         self.X = torch.from_numpy(pyDOE.lhs(self.nx, N_initial))
 
@@ -172,14 +184,14 @@ class BayesOpt(object):
         X_unscaled  = X_unscaled.reshape((1,-1))
         x           = (X_unscaled - self.X_mean) / self.X_std
         gp = copy.deepcopy(self.gpmodel[0])
-        if acquisition==0:
+        if acquisition=='Mean':
             mu, _ = gp(x, full_cov=False, noiseless=False)
             ac = mu
-        elif acquisition==1:
+        elif acquisition=='LCB':
             mu, variance = gp(x, full_cov=False, noiseless=False)
             sigma = variance.sqrt()
             ac = mu - 2 * sigma
-        elif acquisition==2:
+        elif acquisition=='EI':
             mu, variance = gp(x, full_cov=False, noiseless=False)
 
             fs = self.f_min
@@ -207,14 +219,14 @@ class BayesOpt(object):
         #X_unscaled  = X_unscaled.reshape((1,-1))
         x           = X_unscaled#(X_unscaled - self.X_mean) / self.X_std
         gp = copy.deepcopy(self.gpmodel[0])
-        if acquisition==0:
+        if acquisition=='Mean':
             mu, _ = self.GP_predict_ca(x, gp)
             ac = mu
-        elif acquisition==1:
+        elif acquisition=='LCB':
             mu, variance = self.GP_predict_ca(x,gp)
             sigma = sqrt(variance)
             ac = mu - 2 * sigma
-        elif acquisition:
+        elif acquisition=='EI':
             mu, variance = self.GP_predict_ca(x,gp)
 
             fs = self.f_min
