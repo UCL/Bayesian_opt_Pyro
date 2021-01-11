@@ -193,6 +193,7 @@ class solutions:
         self.success = 0
 
     def __str__(self):
+        message = '****** Bayesian Optimization using Torch Results ******' \
                   '\n Solution xmin = '+ str(self.x)+ \
                   '\n Objective value f(xmin) = '+ str(self.f)+ \
                   '\n With ' + str(self.maxfun) + ' Evaluations '
