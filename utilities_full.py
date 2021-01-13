@@ -25,9 +25,13 @@ class BayesOpt(object):
     def __init__(self):
         print('Start Bayesian Optimization using Torch')
 
-    def solve(self, objective, xo=0.5, bounds=(0,1), maxfun=20, N_initial=4,
+    def solve(self, objective, xo=None, bounds=(0,1), maxfun=20, N_initial=4,
               select_kernel='Matern52', acquisition='LCB', casadi=False, constraints = None,
               probabilistic=False, print_iteration=False):
+        if constraints is None:
+            self.x0 = torch.Tensor(bounds[0])
+        else:
+            self.x0 = torch.Tensor(xo)
 
         self.x0            = torch.Tensor(xo)
         self.bounds        = bounds
