@@ -26,7 +26,7 @@ class BayesOpt(object):
         print('Start Bayesian Optimization using Torch')
 
     def solve(self, objective, xo=None, bounds=(0,1), maxfun=20, N_initial=4,
-              select_kernel='Matern52', acquisition='LCB', casadi=False, constraints = None,
+              select_kernel='Matern32', acquisition='LCB', casadi=False, constraints = None,
               probabilistic=False, print_iteration=False):
         if constraints is None:
             self.x0 = torch.Tensor(bounds[0])
@@ -44,11 +44,11 @@ class BayesOpt(object):
             self.constraints = []
         else:
             self.constraints = constraints
-            if not(casadi):
+            if not(casadi) and acquisition != 'EIC':
                 casadi = True
                 warnings.formatwarning = custom_formatwarning
 
-                warnings.warn('WARNING: Pytorch optimization cannot handle constraints. Casadi and ipopt are used instead')
+                warnings.warn('WARNING: Pytorch optimization cannot handle constraints without EIC. Casadi and ipopt are used instead')
         # Append all the functions
         self.set_functions  = [self.objective]
         self.set_functions += [*self.constraints]
@@ -59,7 +59,7 @@ class BayesOpt(object):
         self.nx            = max(self.x0.shape)
         self.casadi        = casadi
 
-        supported_acquisition = ['Mean', 'LCB', 'EI']
+        supported_acquisition = ['Mean', 'LCB', 'EI','EIC']
         k = 0
         for supp in supported_acquisition:
             if acquisition == supp:
@@ -213,6 +213,39 @@ class BayesOpt(object):
             norm_cdf = 0.5 * (1+ torch.erf(Z/sqrt(2)))
 
             ac = -(sigma * norm_pdf + Delta * norm_cdf)
+        elif acquisition=='EIC':
+            mu, variance = gp(x, full_cov=False, noiseless=False)
+
+            fs = self.f_min
+
+            # Scale the variables
+            Y_unscaled = self.Y[:,0]
+            Y_mean, Y_std = Y_unscaled.mean(), Y_unscaled.std()
+            fs_norm = (fs - Y_mean) / Y_std
+            mean = mu
+            Delta = fs_norm - mean
+            sigma = torch.sqrt(variance)
+
+            Z = (Delta) / (sigma+1e-5)
+            norm_pdf = torch.exp(-Z**2/2)/torch.sqrt(2*torch.Tensor([np.pi]))
+            norm_cdf = 0.5 * (1+ torch.erf(Z/sqrt(2)))
+
+            ac = -(sigma * norm_pdf + Delta * norm_cdf)
+            p = 1
+            for i in range(1,self.card_of_funcs):
+
+
+                Y_unscaled = self.Y[:, i]
+                Y_mean, Y_std = Y_unscaled.mean(), Y_unscaled.std()
+                gp_c = copy.deepcopy(self.gpmodel[i])
+
+                mean_norm, var_norm = gp_c(x, full_cov=False, noiseless=False)
+
+                mean, var = mean_norm * Y_std + Y_mean, var_norm * Y_std ** 2
+                Z_p = mean/var#mu/(variance + 1e-5)#(mu-Y_mean)/Y_std
+                p  *=  0.5 * (1+ torch.erf(Z_p/sqrt(2)))
+            ac = ac * p
+
         else:
             print(NotImplementedError)
             ac = 0
@@ -236,7 +269,7 @@ class BayesOpt(object):
             fs = self.f_min
             Y_unscaled = self.Y[:,0]
             Y_mean, Y_std = Y_unscaled.mean(), Y_unscaled.std()
-            fs_norm    = (fs - Y_mean) / Y_std
+            fs_norm    = (fs - Y_mean) / (Y_std)
             fs_norm_ca = SX(fs_norm.data.numpy())
             mean = mu
             Delta = fs_norm_ca - mean
@@ -247,6 +280,37 @@ class BayesOpt(object):
             norm_cdf = 0.5 * (1+ erf(Z/sqrt(2)))
 
             ac = -(sigma * norm_pdf + Delta * norm_cdf)
+        elif acquisition=='EIC':
+            mu, variance = self.GP_predict_ca(x,gp)
+
+            fs = self.f_min
+            Y_unscaled = self.Y[:,0]
+            Y_mean, Y_std = Y_unscaled.mean(), Y_unscaled.std()
+            fs_norm    = (fs - Y_mean) / (Y_std)
+            fs_norm_ca = SX(fs_norm.data.numpy())
+            mean = mu
+            Delta = fs_norm_ca - mean
+            sigma = sqrt(variance)
+
+            Z = (Delta) / (sigma+1e-5)
+            norm_pdf = exp(-Z**2/2)/sqrt(2*np.pi)
+            norm_cdf = 0.5 * (1+ erf(Z/sqrt(2)))
+
+            ac = -(sigma * norm_pdf + Delta * norm_cdf)
+            p = 1
+            for i in range(1,self.card_of_funcs):
+
+
+                Y_unscaled = self.Y[:, i]
+                Y_mean, Y_std = SX(Y_unscaled.detach().numpy().mean()),\
+                                SX(Y_unscaled.detach().numpy().std())
+                gp_c = copy.deepcopy(self.gpmodel[i])
+                mean_norm, var_norm = self.GP_predict_ca(x, gp_c)
+
+                mean, var = mean_norm * Y_std + Y_mean, var_norm * Y_std ** 2
+                Z_p = mean/var#mu/(variance + 1e-5)#(mu-Y_mean)/Y_std
+                p  *=  0.5 * (1+ erf(Z_p/sqrt(2)))
+            ac = ac * p
         else:
             print(NotImplementedError)
             ac = 0
@@ -305,7 +369,8 @@ class BayesOpt(object):
                                    SX(self.Y_std.detach().numpy()), \
                                    SX(self.X_mean.detach().numpy()), \
                                    SX(self.Y_mean.detach().numpy())
-        if self.card_of_funcs>0:
+
+        if self.card_of_funcs>0 and self.acquisition != 'EIC':
             for i in range(1,self.card_of_funcs):#self.model.nk*self.model.nu):
                 gp_c = copy.deepcopy(self.gpmodel[i])
 
@@ -313,7 +378,7 @@ class BayesOpt(object):
 
                 mean, var = mean_norm * stdY[i] + meanY[i], var_norm * stdY[i] ** 2
                 if self.probabilistic:
-                    g += [mean-2*(var)**0.5]# + slack]
+                    g += [mean+2*(var)**0.5]# + slack]
                 else:
                     g += [mean]# + slack]
 
@@ -371,7 +436,7 @@ class BayesOpt(object):
 
     # FIXME ADD CONSTRAINTS
 
-    def next_x(self, num_candidates=10):
+    def next_x(self, num_candidates=40):
         candidates = []
         values = []
 
@@ -432,6 +497,8 @@ class BayesOpt(object):
             self.gpmodel += [copy.deepcopy(self.define_GP(i))]
 
         self.gpmodel = self.training()
+        x_his_optimal = np.zeros([self.maxfun,self.nx])
+        y_his_optimal = np.zeros([self.maxfun,self.card_of_funcs])
 
         for i in range(self.maxfun):
             xmin = self.next_x()
@@ -443,6 +510,9 @@ class BayesOpt(object):
                 y_print = self.Y[[optim_iter], 0]
                 print('new x: ', x_print.data.numpy(), 'at iter ', i+1)
                 print('new obj: ', y_print.data.numpy(), 'at iter ', i+1)
+                x_his_optimal[i,:] = self.X[optim_iter].data.numpy()
+                y_his_optimal[i,:] = self.Y[optim_iter, :].data.numpy()
+
             self.gpmodel = self.training()
 
         _, optim = self.find_min_so_far(argmin=True)
@@ -451,8 +521,26 @@ class BayesOpt(object):
 
         print('Optimum Objective Found: ', y_opt.numpy())
         print('Optimum point Found: ', x_opt.numpy())
+        output_dict = {}
+        output_dict['x_all'] = self.X
+        output_dict['x']     = x_opt#
+        output_dict['f']     = y_opt#
+        if self.card_of_funcs>0:
+            output_dict['g'] = self.Y[optim,1:]
+        else:
+            output_dict['g'] = 'No constraints'
+        output_dict['g_store'] = self.Y[self.N_initial:,1:]
+        output_dict['x_store'] = self.X[self.N_initial:]
+        output_dict['f_store'] = self.Y[self.N_initial:,0]
+        output_dict['f_all']   = self.Y
+        output_dict['f_best_so_far'] = x_his_optimal
+        output_dict['x_best_so_far'] = y_his_optimal
 
-        return solutions( x_opt, y_opt, self.maxfun)
+
+
+
+
+        return solutions( x_opt, y_opt, self.maxfun, output_dict)
 
     # FIXME ADD CONSTRAINTS
 
@@ -548,7 +636,7 @@ class BayesOpt(object):
             Y_norm = gp1.y.detach().numpy()#self.Y_norm.detach().numpy()
             nd, hypopt = 1, params
             Kopt = self.Cov_mat(self.kernel, X_norm, hypopt[1]**2, hypopt[0])\
-                   +params[-1]*np.eye(X_norm.shape[0])#gp1.kernel(self.X_norm).detach().numpy()\
+                   +params[-1]*np.eye(X_norm.shape[0]) + 1e-5*np.eye(X_norm.shape[0])#gp1.kernel(self.X_norm).detach().numpy()\
 
             invKopt = np.linalg.pinv(Kopt)
             Ynorm, Xnorm = SX(DM(Y_norm)), SX(DM(X_norm))
@@ -619,11 +707,12 @@ class BayesOpt(object):
 
 
 class solutions:
-    def __init__(self, x_opt, y_opt, maxfun):
+    def __init__(self, x_opt, y_opt, maxfun, output_dict):
         self.x = x_opt.detach().numpy()
         self.f = y_opt.detach().numpy()
-        self.maxfun = maxfun
-        self.success = 0
+        self.maxfun      = maxfun
+        self.success     = 0
+        self.output_dict = output_dict
 
     def __str__(self):
         message = '****** Bayesian Optimization using Torch Results ******' \
@@ -631,3 +720,66 @@ class solutions:
                   '\n Objective value f(xmin) = '+ str(self.f)+ \
                   '\n With ' + str(self.maxfun) + ' Evaluations '
         return  message
+
+
+# ------------------------------------------------
+#  This file contains extra functions to perform
+#  additional operations needed everywhere
+#  e.g. Create objective with penalties.
+#  Generate initial points for the model-based methods
+
+import functools
+import warnings
+
+
+
+class PenaltyFunctions:
+    def __init__(self, f, g, type_penalty='l2', mu=100):
+        self.f = f
+        self.g = g
+        self.type_p = type_penalty
+        self.aug_obj = self.augmented_objective(mu)
+
+    def create_quadratic_penalized_objective(self, mu, order, x):
+
+        obj = self.f(x)
+        n_con = len(self.g)
+        for i in range(n_con):
+            obj += mu * max(self.g[i](x), 0) ** order
+
+        return obj
+
+    def augmented_objective(self, mu):
+        """
+
+        :param mu: The penalized parameter
+        :type mu: float
+        :return:  obj_aug
+        :rtype:   function
+        """
+        if self.type_p == 'l2':
+            warnings.formatwarning = custom_formatwarning
+
+            warnings.warn(
+                'L2 penalty is used with parameter ' + str(mu))
+
+            obj_aug = functools.partial(self.create_quadratic_penalized_objective,
+                                        mu, 2)
+        elif self.type_p == 'l1':
+            warnings.formatwarning = custom_formatwarning
+
+            warnings.warn(
+                'L1 penalty is used with parameter ' + str(mu))
+
+            obj_aug = functools.partial(self.create_quadratic_penalized_objective,
+                                        mu, 1)
+        else:
+            mu_new = 100
+            warnings.formatwarning = custom_formatwarning
+
+            warnings.warn(
+                'WARNING: Penalty type is not supported. L2 penalty is used instead with parameter ' + str(mu_new))
+
+            obj_aug = functools.partial(self.create_quadratic_penalized_objective,
+                                        mu_new, 2)
+        return obj_aug

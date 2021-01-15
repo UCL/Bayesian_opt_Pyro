@@ -16,7 +16,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="140">
+            <state relative-caret-position="252">
               <caret line="40" selection-start-line="40" selection-end-line="40" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
@@ -28,11 +28,32 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test functions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="246">
-              <caret line="44" lean-forward="true" selection-start-line="44" selection-end-line="44" />
+            <state relative-caret-position="140">
+              <caret line="67" column="14" selection-start-line="67" selection-end-line="68" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pobyqa_test_fnctions.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="140">
+              <caret line="24" lean-forward="true" selection-start-line="24" selection-end-line="24" />
+              <folding>
+                <element signature="e#0#38#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/Anaconda3/envs/trial/Lib/site-packages/pybobyqa/solver.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="106">
+              <caret line="107" selection-start-line="107" selection-end-line="107" />
             </state>
           </provider>
         </entry>
@@ -50,18 +71,18 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/utilities_full.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="191">
-              <caret line="452" column="39" lean-forward="true" selection-start-line="452" selection-start-column="39" selection-end-line="452" selection-end-column="39" />
+            <state relative-caret-position="153">
+              <caret line="735" column="14" lean-forward="true" selection-start-line="735" selection-end-line="784" selection-end-column="22" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
                 <element signature="e#12183#12385#0" />
                 <element signature="e#13960#14926#0" />
                 <element signature="e#14983#15686#0" />
                 <element signature="e#18096#19101#0" />
-                <element signature="e#19125#19614#0" />
+                <element signature="e#29412#31066#0" />
               </folding>
             </state>
           </provider>
@@ -78,21 +99,7 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>find_a_candidate</find>
-      <find>ac</find>
-      <find>next_x</find>
-      <find>acquisition_func</find>
-      <find>acquisition_func_ca</find>
-      <find>candi</find>
-      <find>_ca</find>
-      <find>candida</find>
-      <find>Predict</find>
-      <find>Predict_ca</find>
-      <find>FIND_</find>
-      <find>PRINT(</find>
-      <find>find</find>
       <find>find_a_candidate_ca</find>
-      <find>acqui</find>
       <find>GP_PRE</find>
       <find>update</find>
       <find>acq</find>
@@ -100,7 +107,6 @@
       <find>== 2</find>
       <find>training</find>
       <find>self.f_</find>
-      <find>GP_predict_ca</find>
       <find>==2</find>
       <find>find_min</find>
       <find>trainin</find>
@@ -108,6 +114,21 @@
       <find>==</find>
       <find>mEAN</find>
       <find>=='Me</find>
+      <find>find_min_so_far</find>
+      <find>acquisition_func_ca</find>
+      <find>'EI</find>
+      <find>_ca</find>
+      <find>GP_predict_ca</find>
+      <find>jitt</find>
+      <find>gp_pre</find>
+      <find>1e-</find>
+      <find>1E-5</find>
+      <find>ei</find>
+      <find>1e-5</find>
+      <find>predict_ca</find>
+      <find>eic</find>
+      <find>EIC</find>
+      <find>acqui</find>
     </findStrings>
     <replaceStrings>
       <replace>SX</replace>
@@ -122,8 +143,9 @@
         <option value="$PROJECT_DIR$/uts1.py" />
         <option value="$PROJECT_DIR$/utilities.py" />
         <option value="$PROJECT_DIR$/main.py" />
-        <option value="$PROJECT_DIR$/utilities_full.py" />
         <option value="$PROJECT_DIR$/test functions.py" />
+        <option value="$PROJECT_DIR$/utilities_full.py" />
+        <option value="$PROJECT_DIR$/pobyqa_test_fnctions.py" />
       </list>
     </option>
   </component>
@@ -145,11 +167,6 @@
               <item name="Bayesian_opt_Pyro" type="b2602c69:ProjectViewProjectNode" />
               <item name="Bayesian_opt_Pyro" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="Bayesian_opt_Pyro" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Bayesian_opt_Pyro" type="462c0819:PsiDirectoryNode" />
-              <item name="utilities_full.py" type="8704e2dd:PyFileNode" />
-            </path>
           </expand>
           <select />
         </subPane>
@@ -157,7 +174,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/test functions.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/pobyqa_test_fnctions.py" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunDashboard">
@@ -173,7 +190,7 @@
     </option>
   </component>
   <component name="RunManager">
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+    <configuration name="pobyqa_test_fnctions" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="Bayesian_opt_Pyro" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -185,7 +202,7 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test functions.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pobyqa_test_fnctions.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -231,7 +248,7 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.32919255" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.35714287" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.431677" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32919255" />
@@ -254,11 +271,6 @@
           <option name="timeStamp" value="109" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utilities_full.py</url>
-          <line>454</line>
-          <option name="timeStamp" value="153" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/utilities.py</url>
           <line>157</line>
           <option name="timeStamp" value="154" />
@@ -270,8 +282,28 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/test functions.py</url>
-          <line>43</line>
-          <option name="timeStamp" value="169" />
+          <line>105</line>
+          <option name="timeStamp" value="188" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/test functions.py</url>
+          <line>79</line>
+          <option name="timeStamp" value="190" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pobyqa_test_fnctions.py</url>
+          <line>93</line>
+          <option name="timeStamp" value="192" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pobyqa_test_fnctions.py</url>
+          <line>76</line>
+          <option name="timeStamp" value="194" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pobyqa_test_fnctions.py</url>
+          <line>67</line>
+          <option name="timeStamp" value="195" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -423,7 +455,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="140">
+        <state relative-caret-position="252">
           <caret line="40" selection-start-line="40" selection-end-line="40" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
@@ -433,25 +465,49 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="246">
-          <caret line="44" lean-forward="true" selection-start-line="44" selection-end-line="44" />
+        <state relative-caret-position="140">
+          <caret line="67" column="14" selection-start-line="67" selection-end-line="68" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/Anaconda3/envs/trial/Lib/site-packages/pybobyqa/solver.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="106">
+          <caret line="107" selection-start-line="107" selection-end-line="107" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Anaconda3/envs/trial/Lib/site-packages/pybobyqa/util.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="106">
+          <caret line="50" column="23" lean-forward="true" selection-start-line="50" selection-start-column="23" selection-end-line="50" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/utilities_full.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="191">
-          <caret line="452" column="39" lean-forward="true" selection-start-line="452" selection-start-column="39" selection-end-line="452" selection-end-column="39" />
+        <state relative-caret-position="153">
+          <caret line="735" column="14" lean-forward="true" selection-start-line="735" selection-end-line="784" selection-end-column="22" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
             <element signature="e#12183#12385#0" />
             <element signature="e#13960#14926#0" />
             <element signature="e#14983#15686#0" />
             <element signature="e#18096#19101#0" />
-            <element signature="e#19125#19614#0" />
+            <element signature="e#29412#31066#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pobyqa_test_fnctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="140">
+          <caret line="24" lean-forward="true" selection-start-line="24" selection-end-line="24" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
           </folding>
         </state>
       </provider>

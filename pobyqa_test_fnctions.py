@@ -15,7 +15,8 @@ import pybobyqa
 import functools
 
 
-
+import logging
+#logging.basicConfig(level=logging.INFO, format='%(message)s')
 def rosenbrock_f(x):
     '''
     Unconstrained Rosenbrock function (objective)
@@ -52,12 +53,7 @@ def penalized_objective(f, g, mu, x):
     n_con = len(g)
     for i in range(n_con):
         obj += mu*max(g[i](x),0)**2
-
     return obj
-
-
-
-
 
 
 f1 = rosenbrock_f
@@ -65,21 +61,17 @@ g1 = rosenbrock_g1
 g2 = rosenbrock_g2
 
 
-f_pen = PenaltyFunctions(f1,[g1,g2],type_penalty='l2', mu=100)#functools.partial(penalized_objective,f1,[g1,g2], 100)
+aug_functions = PenaltyFunctions(f1,[g1,g2],type_penalty='le', mu=100)#functools.partial(penalized_objective,f1,[g1,g2], 100)
 
-
-
+f_pen = aug_functions.aug_obj
 
 bounds = np.array([[-1.5,1.5],[-1.5,1.5]])
 x0 = np.array([0.5,0.5])
+user_params = {'logging.save_diagnostic_info': True}
+user_params['logging.save_xk'] = True
+user_params['logging.save_xk'] = True
 
-soln = pybobyqa.solve(f_pen, x0, bounds=bounds.T)
-
-
-#solution1 = BayesOpt().solve(f1, x0, bounds=bounds.T, print_iteration=True, constraints=[g1,g2])
-solution = BayesOpt().solve(f1, x0, acquisition='EIC',bounds=bounds.T, print_iteration=True, constraints=[g1, g2], casadi=True)
-
-
+soln = pybobyqa.solve(f_pen, x0, bounds=bounds.T, user_params=user_params, maxfun=100)
 
 
 def quadratic_g(x):
@@ -101,7 +93,3 @@ f_pen = functools.partial(penalized_objective,f1,[g1,g2], 100)
 
 soln1 = pybobyqa.solve(f_pen, x0, bounds=bounds.T)
 
-
-
-solution2 = BayesOpt().solve(f1, x0, acquisition='EIC',bounds=bounds.T,
-                             print_iteration=True, constraints=[g1], casadi=True)
