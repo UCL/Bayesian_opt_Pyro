@@ -28,6 +28,33 @@ class BayesOpt(object):
     def solve(self, objective, xo=None, bounds=(0,1), maxfun=20, N_initial=4,
               select_kernel='Matern32', acquisition='LCB', casadi=False, constraints = None,
               probabilistic=False, print_iteration=False):
+        """
+
+        :param objective:           Objective function with numpy inputs
+        :type objective:            Function
+        :param xo:                  Initial point, not used at the moment
+        :type xo:                   Numpy array
+        :param bounds:              Bounds for the desicion variabls
+        :type bounds:               Tuple of numpy arrays or numpy array
+        :param maxfun:              Maximum number of function evaluations
+        :type maxfun:               Integer
+        :param N_initial:           Number of initial points
+        :type N_initial:            Integer
+        :param select_kernel:       Type of kernel
+        :type select_kernel:        String
+        :param acquisition:         Type of acquitiison functions
+        :type acquisition:          String
+        :param casadi:              Boolean that indicates if casadi is emplyed or not
+        :type casadi:               Boolean
+        :param constraints:         List of the constraints, if there are no constraints then Nana
+        :type constraints:          List of functions
+        :param probabilistic:       Satisfy constraints with probability
+        :type probabilistic:        Boolean
+        :param print_iteration:     Boolean that indicates if the results will be printed per iteration
+        :type print_iteration:      Boolean
+        :return:                    (x, objective, maxfun, dictionary with the results)
+        :rtype:                     Tuple
+        """
         if constraints is None:
             self.x0 = torch.Tensor(bounds[0])
         else:
@@ -76,18 +103,28 @@ class BayesOpt(object):
         sol  = self.run_main()
         return sol
 
-    # FIXME ADD CONSTRAINTS
 
     def run_initial(self):
+        """
+        This function computes the initial N_initial points to fit the Gaussian process
+        :return: Y
+        :rtype:  tensor
+        """
         Y = torch.zeros([self.N_initial, self.card_of_funcs])
         for i in range(self.N_initial):
             for j in range(self.card_of_funcs):
                 Y[i, j] = self.compute_function(self.X[i,:], self.set_functions[j]).reshape(-1,)
         return Y
-    # FIXME ADD CONSTRAINTS
+
 
     def define_GP(self,i):
-
+        """
+        This function predefines the Gaussian processes to be trained
+        :param i:  This is the indexed GP to be trained 0 for objective and 1+ for the rest
+        :type i:   integer
+        :return:   Defined GP
+        :rtype:    pyro object
+        """
         Y_unscaled  = self.Y
         X_unscaled   = self.X
         nx = self.nx
@@ -100,25 +137,6 @@ class BayesOpt(object):
                                    (Y_unscaled - self.Y_mean) / self.Y_std
 
         X, Y = self.X_norm, self.Y_norm
-        # self.gpmodel = []
-        # for i in range(self.card_of_funcs):
-        #     if self.kernel=='Matern52':
-        #         self.gpmodel += list([gp.models.GPRegression(X, Y[:,i], gp.kernels.Matern52(input_dim=nx,
-        #                                          lengthscale=torch.ones(nx)),
-        #                                          noise=torch.tensor(0.1), jitter=1.0e-4,)])
-        #     elif self.kernel=='Matern32':
-        #         self.gpmodel += [gp.models.GPRegression(X, Y[:,i], gp.kernels.Matern32(input_dim=nx,
-        #                                          lengthscale=torch.ones(nx)),
-        #                                          noise=torch.tensor(0.1), jitter=1.0e-4,)]
-        #     elif self.kernel=='RBF':
-        #         self.gpmodel += [gp.models.GPRegression(X, Y[:,i], gp.kernels.RBF(input_dim=nx,
-        #                                          lengthscale=torch.ones(nx)),
-        #                                          noise=torch.tensor(0.1), jitter=1.0e-4,)]
-        #     else:
-        #         print('NOT IMPLEMENTED KERNEL, USE RBF INSTEAD')
-        #         self.gpmodel += [gp.models.GPRegression(X, Y[:,i], gp.kernels.RBF(input_dim=nx,
-        #                                          lengthscale=torch.ones(nx)),
-        #                                          noise=torch.tensor(0.1), jitter=1.0e-4,)]
 
         if self.kernel == 'Matern52':
             gpmodel = gp.models.GPRegression(X, Y[:, i], gp.kernels.Matern52(input_dim=nx,                                                                                         lengthscale=torch.ones(nx)),
@@ -140,7 +158,11 @@ class BayesOpt(object):
 
 
     def training(self):
-
+        """
+        This function performs the training for the GPs
+        :return: All GPs
+        :rtype:  list of pyro objects
+        """
         Y_unscaled  = self.Y
         X_unscaled   = self.X
         nx = self.nx
@@ -174,16 +196,35 @@ class BayesOpt(object):
 
 
     def step_train(self, gp_m, X, y):
+        """
+        This function performs the steps for the the training of each gp
+        :param gp_m:  The Gp to be trained
+        :type gp_m:   pyro object
+        :param X:     X input set to for training
+        :type X:      tensor
+        :param y:     Labels for the Gaussian processes
+        :type y:      tensor
+        :return:      trained GP
+        :rtype:       pyro object
+        """
+
         gp_m.set_data(X, y)
         # optimize the GP hyperparameters using Adam with lr=0.001
         pyro.clear_param_store()
         optimizers = torch.optim.Adam(gp_m.parameters(), lr=0.001)
         s = gp.util.train(gp_m, optimizers)
-        #print(s)
+
         return gp_m
 
 
     def acquisition_func(self, X_unscaled):
+        """
+        Given the input the acquisition function is computed FOR THE pytorch optimization
+        :param X_unscaled:  input to be optimized
+        :type X_unscaled:   SX
+        :return:            acquisition as a casadi object
+        :rtype:             SX
+        """
         acquisition = self.acquisition
         X_unscaled  = X_unscaled.reshape((1,-1))
         x           = (X_unscaled - self.X_mean) / self.X_std
@@ -252,6 +293,13 @@ class BayesOpt(object):
         return ac
 
     def acquisition_func_ca(self, X_unscaled):
+        """
+        Given the input the acquisition function is computed FOR THE CASADI optimization
+        :param X_unscaled:  input to be optimized
+        :type X_unscaled:   SX
+        :return:            acquisition as a casadi object
+        :rtype:             SX
+        """
         acquisition = self.acquisition
         #X_unscaled  = X_unscaled.reshape((1,-1))
         x           = X_unscaled#(X_unscaled - self.X_mean) / self.X_std
@@ -317,6 +365,13 @@ class BayesOpt(object):
         return ac
 
     def find_a_candidate(self, x_init):
+        """
+        Performs multistart optimization using BFGS within Pytorch
+        :param x_init:  initial guess
+        :type x_init:   tensor
+        :return:        resulted optimum
+        :rtype:         tensor detached from gradient
+        """
         # transform x to an unconstrained domain
         constraint = constraints.interval(torch.from_numpy(self.bounds[0]).type(torch.FloatTensor),
                                           torch.from_numpy(self.bounds[1]).type(torch.FloatTensor))
@@ -338,6 +393,13 @@ class BayesOpt(object):
         return x.detach()
 
     def find_a_candidate_ca(self, x_init):
+        """
+        Performs multistart optimization using ipopt within casadi
+        :param x_init:  initial guess
+        :type x_init:   tensor
+        :return:        sol['x'].full(), solver, sol
+        :rtype:         tSX solution, solver diagnosrtics, all the solution results
+        """
         # transform x to an unconstrained domain
         constraint = constraints.interval(torch.from_numpy(self.bounds[0]).type(torch.FloatTensor),
                                           torch.from_numpy(self.bounds[1]).type(torch.FloatTensor))
@@ -434,9 +496,15 @@ class BayesOpt(object):
 
         return sol['x'].full(), solver, sol
 
-    # FIXME ADD CONSTRAINTS
 
     def next_x(self, num_candidates=40):
+        """
+        Performs the multistart for optimization
+        :param num_candidates:  number of candidates
+        :type num_candidates:   integer
+        :return:                best solution
+        :rtype:                 tensor
+        """
         candidates = []
         values = []
 
@@ -475,14 +543,24 @@ class BayesOpt(object):
 
 
     def generate_samples_for_multistart(self, multi_start=30):
+        """
+        Generates the points for the multistart
+        :param multi_start:  number of multistarts
+        :type multi_start:   integer
+        :return:             initial guesses for optimization
+        :rtype:              numpy array
+        """
         multi_startvec = sobol_seq.i4_sobol_generate(self.nx, multi_start)
 
         multi_startvec_scaled = multi_startvec *(self.bounds[1]-self.bounds[0]) + self.bounds[0]
         return  multi_startvec_scaled
 
-    # FIXME UPDATE DATA WITH CONSTRAINTS
 
     def update_data(self, xmin):
+        """
+        Updates the data set using the new optimum point
+
+        """
         xmin = xmin.reshape(-1,)
         y = torch.zeros([1, self.card_of_funcs])
         for i in range(self.card_of_funcs):
@@ -491,6 +569,11 @@ class BayesOpt(object):
         self.Y = torch.cat([self.Y, y])
 
     def run_main(self):
+        """
+        Run the main loop of the Bayesopt
+        :return: x_opt, y_opt, self.maxfun, output_dict
+        :rtype:  tensor, tensor, integer, dictionary
+        """
         self.Y = self.run_initial()
         self.gpmodel = []
         for i in range(self.card_of_funcs):
@@ -542,10 +625,13 @@ class BayesOpt(object):
 
         return solutions( x_opt, y_opt, self.maxfun, output_dict)
 
-    # FIXME ADD CONSTRAINTS
 
     def find_min_so_far(self, argmin=False):
-
+        """
+        This function find the best solution so far, mainly used for EI
+        :param argmin: Boolean that if it is True the func returns which point is the best
+        :type argmin:  Boolean
+        """
         min = np.inf
         index = np.inf
         if self.card_of_funcs==1:
@@ -568,12 +654,29 @@ class BayesOpt(object):
 
 
     def compute_function(self,x_torch, f):
+        """
+        Computes the function evaluation. It goeas from tensor to numpy, then computes the function and
+        comes transforms the solution from numpy to tensors
+        :param x_torch:  input
+        :type x_torch:   tensor
+        :param f:        object to be evaluated
+        :type f:         function
+        :return:         evaluated point
+        :rtype:          tensor
+        """
         x = x_torch.detach().numpy().reshape(-1,)
         y = f(x).reshape(-1,)
 
         return torch.from_numpy(y).type(torch.FloatTensor)
 
     def extract_parameters(self, gp):
+        """
+        Extracts the parameters of the gp
+        :param gp:  the gp that we need to extract the parameters from
+        :type gp:   pyro object
+        :return:    list of parameters
+        :rtype:     list
+        """
         params = []
 
         for param in gp.kernel.parameters():
@@ -728,58 +831,3 @@ class solutions:
 #  e.g. Create objective with penalties.
 #  Generate initial points for the model-based methods
 
-import functools
-import warnings
-
-
-
-class PenaltyFunctions:
-    def __init__(self, f, g, type_penalty='l2', mu=100):
-        self.f = f
-        self.g = g
-        self.type_p = type_penalty
-        self.aug_obj = self.augmented_objective(mu)
-
-    def create_quadratic_penalized_objective(self, mu, order, x):
-
-        obj = self.f(x)
-        n_con = len(self.g)
-        for i in range(n_con):
-            obj += mu * max(self.g[i](x), 0) ** order
-
-        return obj
-
-    def augmented_objective(self, mu):
-        """
-
-        :param mu: The penalized parameter
-        :type mu: float
-        :return:  obj_aug
-        :rtype:   function
-        """
-        if self.type_p == 'l2':
-            warnings.formatwarning = custom_formatwarning
-
-            warnings.warn(
-                'L2 penalty is used with parameter ' + str(mu))
-
-            obj_aug = functools.partial(self.create_quadratic_penalized_objective,
-                                        mu, 2)
-        elif self.type_p == 'l1':
-            warnings.formatwarning = custom_formatwarning
-
-            warnings.warn(
-                'L1 penalty is used with parameter ' + str(mu))
-
-            obj_aug = functools.partial(self.create_quadratic_penalized_objective,
-                                        mu, 1)
-        else:
-            mu_new = 100
-            warnings.formatwarning = custom_formatwarning
-
-            warnings.warn(
-                'WARNING: Penalty type is not supported. L2 penalty is used instead with parameter ' + str(mu_new))
-
-            obj_aug = functools.partial(self.create_quadratic_penalized_objective,
-                                        mu_new, 2)
-        return obj_aug
